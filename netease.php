@@ -53,28 +53,38 @@ class LudysuNetEaseLrc {
         }
 
         // Try to find the artists that match exactly
+        $artistMatchArray = array();
         foreach ($songArray as $song) {
+            $elem = array(
+                'id' => $song['id'], 
+                'artist' => $song['artists'][0]["name"], 
+                'title' => $song['name'], 
+                'alt' => $song['alias'][0] . "; Album: " . $song['album']
+            );
+            array_push($foundArray, $elem);
+
+            // Match artist
             foreach ($song['artists'] as $item) {
                 if (strtolower($item['name']) === strtolower($artist)) {
-                    array_push($foundArray, $song['id']);
+                    $elem['artist'] = $item['name'];
+                    array_push($artistMatchArray, $elem);
                     break;
                 }
             }
         }
 
-        if (count($foundArray) == 0) {
-            foreach ($songArray as $song) {
-                array_push($foundArray, $song["id"]);
-            }
+        if (count($artistMatchArray) > 0) {
+            $foundArray = $artistMatchArray;
         }
 
-        // It's not easy for user to select the best match, so randomize the restult so that next time a new one will be returned
-        shuffle($foundArray);
-        foreach ($foundArray as $songId) {
-            $info->addTrackInfoToList($artist, $title, $songId, '');
+        // It's not easy for user to select the best match, so randomize the first match so that next time a new one will be returned
+        $info->addTrackInfoToList($artist, $title, "@@@" . $foundArray[rand(0, count($foundArray) - 1)]['id'], "I'm feeling lucky. Random result of the best matches.");
+        foreach ($foundArray as $song) {
+            // add artist, title, id, lrc preview (or additional comment)
+            $info->addTrackInfoToList($song['artist'], $song['title'], $song['id'], $song['id'] . "; " . $song['alt']);
         }
 
-        return count($foundArray) ;
+        return count($foundArray) + 1;
     }
 
     /**

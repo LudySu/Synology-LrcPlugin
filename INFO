@@ -1,0 +1,10 @@
+{
+    "name": "NetEaseLrc",
+    "displayname": "NE Cloud Music Lrc",
+    "description": "",
+    "version": "1.0",
+    "site": "http://music.163.com",
+    "module": "netease.php",
+    "type": "lyric",
+    "class": "NetEaseLrc"
+}

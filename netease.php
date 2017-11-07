@@ -1,12 +1,16 @@
 <?php
-$DEBUG = true;
+
+$DEBUG = false;
 $NEED_TRANSLATION = false;
 
 
 /**
  * Implements the functions required by Audio Station/DSAudio.
+ *
+ * @author Ludy Su (https://github.com/LudySu/Synology-LrcPlugin)
+ * @see https://global.download.synology.com/download/Document/DeveloperGuide/AS_Guide.pdf
  */
-class NetEaseLrc {
+class LudysuNetEaseLrc {
 
     /**
      * Searches for a lyric with the artist and title, and returns the result list.
@@ -15,13 +19,11 @@ class NetEaseLrc {
         $artist = trim($artist);
         $title = trim($title);
         if ($this->isNullOrEmptyString($title)) {
-            echo "song title is empty";
             return 0;
         }
 
         $response = $this->search($title);
         if ($this->isNullOrEmptyString($response)) {
-            echo "===== no songs found in the response";
             return 0;
         }
 
@@ -30,7 +32,6 @@ class NetEaseLrc {
         $foundArray = array();
 
         if(count($songArray) == 0) {
-            echo "===== no songs found";
             return 0;
         }
 
@@ -38,7 +39,6 @@ class NetEaseLrc {
         $exactMatchArray = array();
         $partialMatchArray = array();
         foreach ($songArray as $song) {
-            echo "$title  ===(" . $song['name'] . ")</br>";
             if (strtolower($title) === strtolower($song['name'])) {
                 array_push($exactMatchArray, $song);
             } else if (strpos($song['name'], $title) || strpos($title, $song['name'])) {
@@ -47,10 +47,8 @@ class NetEaseLrc {
         }
 
         if (count($exactMatchArray) != 0) {
-            echo "exact matched titles " . count($exactMatchArray) ."</br>";
             $songArray = $exactMatchArray;
         } else if (count($partialMatchArray != 0)) {
-            echo "part match " . count($partialMatchArray) . "</br>";
             $songArray = $partialMatchArray;
         }
 
@@ -58,16 +56,13 @@ class NetEaseLrc {
         foreach ($songArray as $song) {
             foreach ($song['artists'] as $item) {
                 if (strtolower($item['name']) === strtolower($artist)) {
-                    echo "====== found " . $song['id'] . "</br>";
                     array_push($foundArray, $song['id']);
                     break;
                 }
             }
         }
 
-        echo "found " . count($foundArray) . " exact match artist songs ===== </br>";
         if (count($foundArray) == 0) {
-            echo "no match artist found, picking any match </br>";
             foreach ($songArray as $song) {
                 array_push($foundArray, $song["id"]);
             }
@@ -79,7 +74,7 @@ class NetEaseLrc {
             $info->addTrackInfoToList($artist, $title, $songId, '');
         }
 
-        return count($foundArray);
+        return count($foundArray) ;
     }
 
     /**
@@ -134,11 +129,9 @@ class NetEaseLrc {
         $url = "http://music.163.com/api/song/lyric?os=pc&id=" . $music_id . "&lv=-1&kv=0&tv=-1";
         $response = $this->download($url);
         if ($this->isNullOrEmptyString($response)) {
-            echo "Can not download lyrics id '$music_id'";
             return NULL;
         }
 
-// var_dump($response);echo "</br>========</br>";
         $json = json_decode($response, true);
         return $json['lrc']['lyric'];
     }
@@ -220,7 +213,7 @@ if ($DEBUG == true) {
     echo "Trying to find lyrics for ['$title'] by artist ['$artist'] ...</br>";
 
     $testObj = new TestObj();
-    $downloader = (new ReflectionClass("NetEaseLrc"))->newInstance();
+    $downloader = (new ReflectionClass("LudysuNetEaseLrc"))->newInstance();
     $count = $downloader->getLyricsList($artist, $title, $testObj);
     if ($count > 0) {
         $item = $testObj->getFirstItem();

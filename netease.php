@@ -11,6 +11,7 @@ $NEED_TRANSLATION = false;
  * @see https://global.download.synology.com/download/Document/DeveloperGuide/AS_Guide.pdf
  */
 class LudysuNetEaseLrc {
+    private $LUCKY_PREFIX = "@@@";
 
     /**
      * Searches for a lyric with the artist and title, and returns the result list.
@@ -56,14 +57,15 @@ class LudysuNetEaseLrc {
         $artistMatchArray = array();
         foreach ($songArray as $song) {
             $elem = array(
-                'id' => $song['id'], 
-                'artist' => $song['artists'][0]["name"], 
-                'title' => $song['name'], 
-                'alt' => $song['alias'][0] . "; Album: " . $song['album']
+                'id' => $song['id'],
+                'artist' => $song['artists'][0]["name"],
+                'title' => $song['name'],
+                'alt' => $song['alias'][0] . "; Album: " . $song['album']['name']
             );
             array_push($foundArray, $elem);
 
             // Match artist
+            // TODO artist in title like feat.
             foreach ($song['artists'] as $item) {
                 if (strtolower($item['name']) === strtolower($artist)) {
                     $elem['artist'] = $item['name'];
@@ -78,7 +80,9 @@ class LudysuNetEaseLrc {
         }
 
         // It's not easy for user to select the best match, so randomize the first match so that next time a new one will be returned
-        $info->addTrackInfoToList($artist, $title, "@@@" . $foundArray[rand(0, count($foundArray) - 1)]['id'], "I'm feeling lucky. Random result of the best matches.");
+        $info->addTrackInfoToList($artist, $title,
+            $this->LUCKY_PREFIX . $foundArray[rand(0, count($foundArray) - 1)]['id'], // Audio Statio will deduplicate, so add a special prefix
+            "I'm feeling lucky. Random result of the best matches.");
         foreach ($foundArray as $song) {
             // add artist, title, id, lrc preview (or additional comment)
             $info->addTrackInfoToList($song['artist'], $song['title'], $song['id'], $song['id'] . "; " . $song['alt']);
@@ -91,6 +95,10 @@ class LudysuNetEaseLrc {
      * Downloads a file with the specific ID
      */
     public function getLyrics($id, $info) {
+        if (substr($id, 0, strlen($this->LUCKY_PREFIX)) === $this->LUCKY_PREFIX) {
+            $id = substr($id, strlen($this->LUCKY_PREFIX), strlen($id));
+        }
+
         //TODO combine translated lrc
         $lrc = $this->downloadLyric($id);
         if ($this->isNullOrEmptyString($lrc)) {

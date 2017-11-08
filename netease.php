@@ -11,7 +11,8 @@ $NEED_TRANSLATION = false;
  * @see https://global.download.synology.com/download/Document/DeveloperGuide/AS_Guide.pdf
  */
 class LudysuNetEaseLrc {
-    private $LUCKY_PREFIX = "@@@";
+    private $mArtist = "";
+    private $mTitle = "";
 
     /**
      * Searches for a lyric with the artist and title, and returns the result list.
@@ -19,6 +20,8 @@ class LudysuNetEaseLrc {
     public function getLyricsList($artist, $title, $info) {
         $artist = trim($artist);
         $title = trim($title);
+        $this->mArtist = $artist;
+        $this->mTitle = $title;
         if ($this->isNullOrEmptyString($title)) {
             return 0;
         }
@@ -30,7 +33,6 @@ class LudysuNetEaseLrc {
 
         $json = json_decode($response, true);
         $songArray = $json['result']['songs'];
-        $foundArray = array();
 
         if(count($songArray) == 0) {
             return 0;
@@ -42,7 +44,7 @@ class LudysuNetEaseLrc {
         foreach ($songArray as $song) {
             if (strtolower($title) === strtolower($song['name'])) {
                 array_push($exactMatchArray, $song);
-            } else if (strpos($song['name'], $title) || strpos($title, $song['name'])) {
+            } else if (strpos($song['name'], $title) !== FALSE || strpos($title, $song['name']) !== FALSE) {
                 array_push($partialMatchArray, $song);
             }
         }
@@ -53,8 +55,8 @@ class LudysuNetEaseLrc {
             $songArray = $partialMatchArray;
         }
 
-        // Try to find the artists that match exactly
-        $artistMatchArray = array();
+        // Get information from songs
+        $foundArray = array();
         foreach ($songArray as $song) {
             $elem = array(
                 'id' => $song['id'],
@@ -62,43 +64,34 @@ class LudysuNetEaseLrc {
                 'title' => $song['name'],
                 'alt' => $song['alias'][0] . "; Album: " . $song['album']['name']
             );
-            array_push($foundArray, $elem);
 
-            // Match artist
-            // TODO artist in title like feat.
+            // Find the best match artist from all artists belong to a song
+            $min = 256;
             foreach ($song['artists'] as $item) {
-                if (strtolower($item['name']) === strtolower($artist)) {
+                $distance = levenshtein($artist, $item['name']);
+                if ($distance < $min) {
+                    $min = $distance;
                     $elem['artist'] = $item['name'];
-                    array_push($artistMatchArray, $elem);
-                    break;
                 }
             }
+
+            array_push($foundArray, $elem);
         }
 
-        if (count($artistMatchArray) > 0) {
-            $foundArray = $artistMatchArray;
-        }
-
-        // It's not easy for user to select the best match, so randomize the first match so that next time a new one will be returned
-        $info->addTrackInfoToList($artist, $title,
-            $this->LUCKY_PREFIX . $foundArray[rand(0, count($foundArray) - 1)]['id'], // Audio Statio will deduplicate, so add a special prefix
-            "I'm feeling lucky. Random result of the best matches.");
+        // Sort by best match according to similarity of artist and title
+        usort($foundArray, array($this,'cmp'));
         foreach ($foundArray as $song) {
             // add artist, title, id, lrc preview (or additional comment)
             $info->addTrackInfoToList($song['artist'], $song['title'], $song['id'], $song['id'] . "; " . $song['alt']);
         }
 
-        return count($foundArray) + 1;
+        return count($foundArray);
     }
 
     /**
      * Downloads a file with the specific ID
      */
     public function getLyrics($id, $info) {
-        if (substr($id, 0, strlen($this->LUCKY_PREFIX)) === $this->LUCKY_PREFIX) {
-            $id = substr($id, strlen($this->LUCKY_PREFIX), strlen($id));
-        }
-
         //TODO combine translated lrc
         $lrc = $this->downloadLyric($id);
         if ($this->isNullOrEmptyString($lrc)) {
@@ -110,6 +103,19 @@ class LudysuNetEaseLrc {
 
         return true;
     }
+    
+    private function cmp($lhs, $rhs) {
+        // levenshtein(): the smaller the more similarity
+        $scoreArtistL = levenshtein($this->mArtist, $lhs['artist']);
+        $scoreArtistR = levenshtein($this->mArtist, $rhs['artist']);
+        $scoreTitleL = levenshtein($this->mTitle, $lhs['title']);
+        $scoreTitleR = levenshtein($this->mTitle, $rhs['title']);
+
+        // echo "artist " . $lhs['artist'] . " vs " . $rhs['artist'] . " | " . $scoreArtistL . " vs " . $scoreArtistR . "\n";
+        // echo "title " . $lhs['title'] . " vs " . $rhs['title'] . " | " . $scoreTitleL . " vs " . $scoreTitleR. "\n\n";
+
+        return $scoreArtistL + $scoreTitleL - $scoreTitleR - $scoreArtistR;
+    }
 
     private static function search($word) {
         $params = array(
@@ -119,18 +125,12 @@ class LudysuNetEaseLrc {
             'type' => '1', //搜索单曲(1)，歌手(100)，专辑(10)，歌单(1000)，用户(1002)
         );
 
-        $headers = array(
-            'Connection: close', 'Content-Type: application/x-www-form-urlencoded',
-            'Host: music.163.com', 'Cookie: appver=1.5.0.75771;');
-
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => "http://music.163.com/api/search/pc",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query($params),
-            // CURLOPT_REFERER => "http://music.163.com/",
-            // CURLOPT_HTTPHEADER => $headers,
         ));
 
         $output = curl_exec($curl);
@@ -160,14 +160,10 @@ class LudysuNetEaseLrc {
     }
 
     private static function download($url) {
-        $header[] = "Cookie: appver=1.5.0.75771;";
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
-            // CURLOPT_HTTPHEADER => $header,
             CURLOPT_RETURNTRANSFER => true,
-            // CURLOPT_BINARYTRANSFER => true,
-            // CURLOPT_REFERER => "http://music.163.com/",
         ));
         $output = curl_exec($curl);
         curl_close($curl);
@@ -226,8 +222,8 @@ if ($DEBUG == true) {
     /**
      * Main
      */
-    $artist = " lisa";
-    $title = "catch the moment ";
+    $title = "longing";
+    $artist = "ユナ　CV.神田さやか";
     echo "Trying to find lyrics for ['$title'] by artist ['$artist'] ...</br>";
 
     $testObj = new TestObj();

@@ -42,9 +42,11 @@ class LudysuNetEaseLrc {
         $exactMatchArray = array();
         $partialMatchArray = array();
         foreach ($songArray as $song) {
-            if (strtolower($title) === strtolower($song['name'])) {
+            $lowTitle = strtolower($title);
+            $lowResult = strtolower($song['name']);
+            if (strtolower($lowTitle) === strtolower($lowResult)) {
                 array_push($exactMatchArray, $song);
-            } else if (strpos($song['name'], $title) !== FALSE || strpos($title, $song['name']) !== FALSE) {
+            } else if (strpos($lowResult, $lowTitle) !== FALSE || strpos($lowTitle, $lowResult) !== FALSE) {
                 array_push($partialMatchArray, $song);
             }
         }
@@ -66,11 +68,11 @@ class LudysuNetEaseLrc {
             );
 
             // Find the best match artist from all artists belong to a song
-            $min = 256;
+            $max = 0;
             foreach ($song['artists'] as $item) {
-                $distance = levenshtein($artist, $item['name']);
-                if ($distance < $min) {
-                    $min = $distance;
+                $score = $this->getStringSimilarity($artist, $item['name']);
+                if ($score > $max) {
+                    $max = $distance;
                     $elem['artist'] = $item['name'];
                 }
             }
@@ -103,18 +105,25 @@ class LudysuNetEaseLrc {
 
         return true;
     }
-    
+
     private function cmp($lhs, $rhs) {
-        // levenshtein(): the smaller the more similarity
-        $scoreArtistL = levenshtein($this->mArtist, $lhs['artist']);
-        $scoreArtistR = levenshtein($this->mArtist, $rhs['artist']);
-        $scoreTitleL = levenshtein($this->mTitle, $lhs['title']);
-        $scoreTitleR = levenshtein($this->mTitle, $rhs['title']);
+        $scoreArtistL = $this->getStringSimilarity($this->mArtist, $lhs['artist']);
+        $scoreArtistR = $this->getStringSimilarity($this->mArtist, $rhs['artist']);
+        $scoreTitleL = $this->getStringSimilarity($this->mTitle, $lhs['title']);
+        $scoreTitleR = $this->getStringSimilarity($this->mTitle, $rhs['title']);
 
-        // echo "artist " . $lhs['artist'] . " vs " . $rhs['artist'] . " | " . $scoreArtistL . " vs " . $scoreArtistR . "\n";
-        // echo "title " . $lhs['title'] . " vs " . $rhs['title'] . " | " . $scoreTitleL . " vs " . $scoreTitleR. "\n\n";
+        printf("artist " . $lhs['artist'] . " vs " . $rhs['artist'] . " | " . $scoreArtistL . " vs " . $scoreArtistR . "</br>");
+        printf("title " . $lhs['title'] . " vs " . $rhs['title'] . " | " . $scoreTitleL . " vs " . $scoreTitleR. "</br>");
 
-        return $scoreArtistL + $scoreTitleL - $scoreTitleR - $scoreArtistR;
+        return $scoreArtistR + $scoreTitleR - $scoreArtistL - $scoreTitleL;
+    }
+
+    /**
+     * Gets similarity score of 0-100 between 2 strings, the bigger the score is, the more similarity.
+     */
+    private static function getStringSimilarity($lhs, $rhs) {
+        similar_text($lhs, $rhs, $percent);
+        return $percent;
     }
 
     private static function search($word) {
@@ -183,21 +192,21 @@ if ($DEBUG == true) {
         }
 
         public function addLyrics($lyric, $id) {
-            printf("\n");
+            printf("</br>");
             printf("song id: %s\n", $id);
-            printf("\n");
+            printf("</br>");
             printf("== lyric ==\n");
             printf("%s\n", $lyric);
             printf("** END of lyric **\n\n");
         }
 
         public function addTrackInfoToList($artist, $title, $id, $prefix) {
-            printf("\n");
+            printf("</br>");
             printf("song id: %s\n", $id);
             printf("artist [%s]\n", $artist);
             printf("title [%s]\n", $title);
             printf("prefix [%s]\n", $prefix);
-            printf("\n");
+            printf("</br>");
 
             array_push($this->items, array(
                 'artist' => $artist,
@@ -222,8 +231,8 @@ if ($DEBUG == true) {
     /**
      * Main
      */
-    $title = "longing";
-    $artist = "ユナ　CV.神田さやか";
+    $title = "tell your world";
+    $artist = "初音ミク";
     echo "Trying to find lyrics for ['$title'] by artist ['$artist'] ...</br>";
 
     $testObj = new TestObj();

@@ -1,7 +1,7 @@
 {
     "name": "ludysu_neteaselrc",
-    "displayname": "NE Cloud Music Lrc",
-    "description": "NE Cloud Music Lrc",
+    "displayname": "网易云音乐",
+    "description": "特色：根据曲名、艺术家匹配程度高低自动排序",
     "version": "1.0",
     "site": "http://music.163.com",
     "module": "netease.php",

@@ -168,29 +168,39 @@ class LudysuNetEaseLrc {
             $resultLrc = "";
             $orgLines = $this->processLrcLine($orgLrc);
             $transLines = $this->processLrcLine($transLrc);
-            var_dump($orgLines);
+            //var_dump($orgLines);
 
-            foreach ($orgLines as $key => $value) {
+            foreach ($orgLines as $elem) {
+                $key = $elem['tag']; // time tag
+                $value = $elem['lrc']; // lyric line
                 $resultLrc .= $key . $value;
 
                 // Find matching translation
                 $trans = "";
-                // $lastMatchCursor = 0;
-                // for ($i = $lastMatchCursor; $i < count($transLines); $i++) {
-                //     // Check for matching time tag
-                //     if ($key === $transLines[0]) {
-                //         $lastMatchCursor = $i;
-                //         $trans = $transLines[1];
-                //     }
-                // }
+                if (!$this->isNullOrEmptyString($key)) {
+                $lastMatchCursor = 0;
+                for ($i = $lastMatchCursor; $i < count($transLines); $i++) {
+                    $tKey = $transLines[$i]['tag'];
+                    $tValue = $transLines[$i]['lrc'];
+                    echo $key . " =? " . $tKey . "\n";
+                    // Check for matching time tag
+                    if ($key === $tKey) {
+                        $lastMatchCursor = $i + 1;
+                        $trans = $tValue;
+                        break;
+                    }
+                }
+                }
+                
+                echo "\n";
 
-                if (!$this->isNullOrEmptyString($key) && $this->isNullOrEmptyString($trans)) { // $key is empty when it's not time tag, just metadata
+                if (!$this->isNullOrEmptyString($trans)) { // $key is empty when it's not time tag, just metadata
                     $resultLrc .= " 【" . $trans . "】\n";
                 }
                 $resultLrc .= "\n";
             }
 
-            // var_dump($resultLrc);
+            //var_dump($resultLrc);
         }
         return $resultLrc;
     }

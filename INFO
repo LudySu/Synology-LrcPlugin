@@ -1,7 +1,7 @@
 {
     "name": "ludysu_neteaselrc",
     "displayname": "网易云音乐",
-    "description": "特色：根据曲名、艺术家匹配程度高低自动排序",
+    "description": "特色：根据曲名、艺术家匹配程度高低自动排序；可自动添加中文翻译",
     "version": "1.0",
     "site": "http://music.163.com",
     "module": "netease.php",

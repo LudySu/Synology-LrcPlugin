@@ -43,13 +43,13 @@ If the PHP script has `echo()` inside, **Audio Station** will fail to return the
 
 卡在这好久，后来才发现有 `echo()` 的话 **Audio Station** 不能返回任何结果。第一次搞 PHP，整个插件用了大概一个多星期业余时间。
 
-###Determine the best match（计算最佳匹配）
+### Determine the best match（计算最佳匹配）
 
 1. Finds out the *title* that matches exactly or partially
 2. Finds out the best match *artist* from all artists. (The song might have multiple artists)
 3. Sort the search result based on the similarity of *artist* and *title* using `similar_text()`
 
-###Chinese translation（中文翻译）
+### Chinese translation（中文翻译）
 
 Some songs have Chinese translation, the translation is in another lyric file. So this PHP also append the translation to the end of each original lyric line when the time tag matches.
 

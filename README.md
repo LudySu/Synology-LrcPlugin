@@ -54,6 +54,8 @@ If the PHP script has `echo()` inside, **Audio Station** will fail to return the
 Some songs have Chinese translation, the translation is in another lyric file. So this PHP also append the translation to the end of each original lyric line when the time tag matches.
 
 ## Inspired by（灵感来源）
-[Synology Lyric project by Frank Lai](https://bitbucket.org/franklai/synologylyric)
+[Synology Lyric project **by Frank Lai**](https://bitbucket.org/franklai/synologylyric)
 
-[PHP API by Moonlib](http://moonlib.com/606.html)
+[PHP API **by Moonlib**](http://moonlib.com/606.html)
+
+[Synology Audio Station 歌詞外掛 **by Raykuo**](https://blog.ladsai.com/synology-audiostation-%E6%AD%8C%E8%A9%9E%E5%A4%96%E6%8E%9B-2.html)

@@ -53,6 +53,22 @@ If the PHP script has `echo()` inside, **Audio Station** will fail to return the
 
 Some songs have Chinese translation, the translation is in another lyric file. So this PHP also append the translation to the end of each original lyric line when the time tag matches.
 
+### Test web API with curl
+
+**Step 1**: Use this command to search for a song named `Tell Your World`, then you can get a JSON response:
+
+```bash
+curl -v -X POST http://music.163.com/api/search/pc -d "s=Tell Your World&type=1"
+```
+
+**Step 2**: Find the ID in the previous response with key `id`, then you can download the file. In this case the ID is `858520`. Then you can get a JSON response that contains the lyric.
+
+```bash
+curl -v -X GET "http://music.163.com/api/song/lyric?os=pc&id=858520&lv=-1&kv=0&tv=-1"
+```
+
+> Query parameters in the request: `lv` = original version; `tv` = translated version; `kv` = karaoke version, rarely available. Set value to 0 if you don't want that particular version.
+
 ## Inspired by（灵感来源）
 [Synology Lyric project **by Frank Lai**](https://bitbucket.org/franklai/synologylyric)
 

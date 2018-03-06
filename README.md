@@ -27,6 +27,10 @@ If you feel it's not the best match, in **Audio Station** you can right click on
 
 如果觉得歌词不够匹配，在 **Audio Station** 右键单击那首歌，去 `歌曲信息 -> 歌词 -> 从网络搜索` 获取所有搜索结果。你可以从第二个开始尝试，因为第一个就是自动下载的结果。
 
+## TODO (May be)
+
+- [ ] 日文歌词通过Google自动翻译成假名、罗马音
+
 ## Build
 
 In the proejct's root directory, run the included bash script to generate `.aum` files required by **Audio Station**. Both original and translated flavors will be generated.

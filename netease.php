@@ -61,7 +61,7 @@ class LudysuNetEaseLrc {
 
         if (count($exactMatchArray) != 0) {
             $songArray = $exactMatchArray;
-        } else if (count($partialMatchArray != 0)) {
+        } else if (count($partialMatchArray) != 0) {
             $songArray = $partialMatchArray;
         }
 

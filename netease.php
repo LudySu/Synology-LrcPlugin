@@ -193,15 +193,30 @@ class LudysuNetEaseLrc {
     private function getTimeFromTag($tag) {
         $min = substr($tag, 1, 2);
         $sec = substr($tag, 4, 2);
-        $milli = substr($tag, 7, 2);
-        return $milli + $sec * 100 + $min * 60 * 100;
+        $milli = substr($tag, 7, strlen($tag) - 8);
+        return $milli + $sec * 1000 + $min * 60 * 1000;
+    }
+
+    private function getLrcTag($str) {
+        $tag = strstr($str, "]", true);
+        if ($tag === false) {
+            return "";
+        }
+        return $tag . "]";
+    }
+
+    private function getLrcText($str, $tag) {
+        if ($this->isNullOrEmptyString($tag)) {
+            return $str;
+        }
+        return str_replace($tag, "", $str);
     }
 
     private function processLrcLine($lrc) {
         $result = array();
         foreach (explode("\n", $lrc) as $line) {
-            $key = substr($line, 0, 10);
-            $value = substr($line, 10, strlen($line) - 10);
+            $key = $this->getLrcTag($line);
+            $value = $this->getLrcText($line, $key);
             if (!$this->isValidLrcTime($key)) {
                 $key = "";
                 $value = $line;
@@ -215,10 +230,15 @@ class LudysuNetEaseLrc {
     }
 
     private function isValidLrcTime($str) {
-        if ($this->isNullOrEmptyString($str) || strlen($str) != 10 || $str[0] !== "[" || $str[9] != "]") {
+        if ($this->isNullOrEmptyString($str) || $str[0] !== "[") {
             return FALSE;
         }
-        for ($count = 1; $count < 9; $count++) {
+
+        $len = strlen($str);
+        if ($len < 9 || $len > 11) {
+            return FALSE;
+        }
+        for ($count = 1; $count < $len - 1; $count++) {
             $ch = $str[$count];
             if ($ch !== ":" && $ch !== "." && !is_numeric($ch)) {
                 return FALSE;
